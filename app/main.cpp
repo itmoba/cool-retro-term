@@ -12,27 +12,39 @@
 
 #include <fileio.h>
 
-QString getNamedArgument(QStringList args, QString name, QString defaultName)
-{
+
+QString getNamedArgument(QStringList args, QString name, QString defaultName) {
     int index = args.indexOf(name);
-    return (index != -1) ? args[index + 1] : QString(defaultName);
+    return ((index != -1) ? args[index + 1] : QString(defaultName));
 }
 
-QString getNamedArgument(QStringList args, QString name)
-{
-    return getNamedArgument(args, name, "");
+QString getNamedArgument(QStringList args, QString name) {
+    return (getNamedArgument(args, name, ""));
 }
 
-int main(int argc, char *argv[])
-{
-    // Some environmental variable are necessary on certain platforms.
+int main(int argc, const char *argv[]) {
+    /* Some environmental variable are necessary on certain platforms. */
 
-    // This disables QT appmenu under Ubuntu, which is not working with QML apps.
+    /* This disables QT appmenu under Ubuntu, which is not working with QML apps. */
     setenv("QT_QPA_PLATFORMTHEME", "", 1);
 
 #if defined(Q_OS_MAC)
-    // This allows UTF-8 characters usage in OSX.
-    setenv("LC_CTYPE", "UTF-8", 1);
+    /* Updated to reflect macOS Sierra (ver. 10.12.x). */
+    /* This allows UTF-8 characters usage in OSX. */
+    /* setenv("LC_CTYPE", "UTF-8", 1); */
+    const char *dlenv =  "en_US.UTF-8"; /* (d)efault (l)anguage (env)ironment */
+    setenv("LANG", dlenv, 1);
+    setenv("LC_COLLATE", dlenv, 1);
+    setenv("LC_CTYPE", dlenv, 1);   
+    setenv("LC_MESSAGES", dlenv, 1);
+    setenv("LC_MONETARY", dlenv, 1);
+    setenv("LC_NUMERIC", dlenv, 1);
+    setenv("LC_TIME", dlenv, 1);
+    /*
+     * 'LC_ALL' isn't being ignored or neglected; by default, it is equal
+     * to "", and I recommend it be kept this way unless the situation
+     * requires it otherwise.
+     */
 #endif
 
     QApplication app(argc, argv);
@@ -45,7 +57,7 @@ int main(int argc, char *argv[])
     app.setWindowIcon(QIcon(":../icons/32x32/cool-retro-term.png"));
 #endif
 
-    // Manage command line arguments from the cpp side
+    /* Manage command line arguments from the cpp side */
     QStringList args = app.arguments();
     if (args.contains("-h") || args.contains("--help")) {
         qDebug() << "Usage: " + args.at(0) + " [--default-settings] [--workdir <dir>] [--program <prog>] [-p|--profile <prof>] [--fullscreen] [-h|--help]";
@@ -56,10 +68,10 @@ int main(int argc, char *argv[])
         qDebug() << "  -p|--profile <prof> Run cool-retro-term with the given profile.";
         qDebug() << "  -h|--help           Print this help.";
         qDebug() << "  --verbose           Print additional information such as profiles and settings.";
-        return 0;
+        return (0);
     }
 
-    // Manage default command
+    /* Manage default command */
     QStringList cmdList;
     if (args.contains("-e")) {
         cmdList << args.mid(args.indexOf("-e") + 1);
@@ -74,7 +86,7 @@ int main(int argc, char *argv[])
 
     engine.rootContext()->setContextProperty("devicePixelRatio", app.devicePixelRatio());
 
-    // Manage import paths for Linux and OSX.
+    /* Manage import paths for Linux and OSX. */
     QStringList importPathList = engine.importPathList();
     importPathList.prepend(QCoreApplication::applicationDirPath() + "/qmltermwidget");
     importPathList.prepend(QCoreApplication::applicationDirPath() + "/../PlugIns");
@@ -85,11 +97,11 @@ int main(int argc, char *argv[])
 
     if (engine.rootObjects().isEmpty()) {
         qDebug() << "Cannot load QML interface";
-        return EXIT_FAILURE;
+        return (EXIT_FAILURE);
     }
 
-    // Quit the application when the engine closes.
+    /* Quit the application when the engine closes. */
     QObject::connect((QObject*) &engine, SIGNAL(quit()), (QObject*) &app, SLOT(quit()));
 
-    return app.exec();
+    return (app.exec());
 }
