@@ -1,25 +1,35 @@
 .pragma library
 function clamp(x, min, max) {
-    if (x <= min)
-        return min;
-    if (x >= max)
-        return max;
-    return x;
+    if (x <= min) {
+        return (min);
+    }
+    if (x >= max) {
+        return (max);
+    }
+    return (x);
 }
+
 function lint(a, b, t) {
-    return (1 - t) * a + (t) * b;
+    /* return (1 - t) * a + (t) * b; */
+    /* Re-ordered operation to make it faster, as it now involves
+     * one instance of multiplication instead of two */
+    return (a + ((b - a) * t)); 
 }
-function mix(c1, c2, alpha){
-    return Qt.rgba(c1.r * alpha + c2.r * (1-alpha),
-                   c1.g * alpha + c2.g * (1-alpha),
-                   c1.b * alpha + c2.b * (1-alpha),
-                   c1.a * alpha + c2.a * (1-alpha))
+
+function mix(c1, c2, alpha) {
+    var z = 1 - alpha;
+    return (Qt.rgba(c1.r * alpha + c2.r * z,
+                   c1.g * alpha + c2.g * z,
+                   c1.b * alpha + c2.b * z,
+                   c1.a * alpha + c2.a * z));
 }
-function strToColor(s){
-    var r = parseInt(s.substring(1,3), 16) / 256;
-    var g = parseInt(s.substring(3,5), 16) / 256;
-    var b = parseInt(s.substring(5,7), 16) / 256;
-    return Qt.rgba(r, g, b, 1.0);
+
+function strToColor(s) {
+    var f = 1/256;
+    var r = parseInt(s.substring(1,3), 16) * f;
+    var g = parseInt(s.substring(3,5), 16) * f;
+    var b = parseInt(s.substring(5,7), 16) * f;
+    return (Qt.rgba(r, g, b, 1.0));
 }
 
 /* Tokenizes a command into program and arguments, taking into account quoted
@@ -39,15 +49,13 @@ function tokenizeCommandLine(s){
         currentToken += c;
     }
 
-    for (var i = 0; i < s.length; i++) {
-
-        // char followed by backslash, append literally
+    for (var i = 0, slen = s.length; i < slen; ++i) {
+        /* char followed by backslash, append literally */
         if (escaped) {
             escaped = false;
             appendToCurrentToken(s[i]);
-
-        // char inside quotes, either close or append
         } else if (quoteChar) {
+            /* char inside quotes, either close or append */
             escaped = s[i] === '\\';
             if (quoteChar === s[i]) {
                 quoteChar = "";
@@ -55,40 +63,40 @@ function tokenizeCommandLine(s){
             } else if (!escaped) {
                 appendToCurrentToken(s[i]);
             }
-
-        // regular char
         } else {
+            /* regular char */
             escaped = s[i] === '\\';
             switch (s[i]) {
-            case '\\':
-                // begin escape
-                break;
-            case '\n':
-                // newlines always delimits
-                nextToken();
-                break;
-            case ' ':
-            case '\t':
-                // delimit on new whitespace
-                if (currentToken) {
+                /* begin escape */
+                case '\\' : {
+                } break;
+                /* newlines always delimits */
+                case '\n':
                     nextToken();
+                } break;
+                /* delimit on new whitespace */
+                case ' ' :
+                case '\t' : {
+                    if (currentToken) {
+                        nextToken();
+                    }
+                } break;
+                /* begin quoted section */
+                case '\'' :
+                case '"' : {
+                    quoteChar = s[i];
+                } break;
+                default : {
+                    appendToCurrentToken(s[i]);
                 }
-                break;
-            case '\'':
-            case '"':
-                // begin quoted section
-                quoteChar = s[i];
-                break;
-            default:
-                appendToCurrentToken(s[i]);
             }
         }
     }
 
-    // ignore last token if broken quotes/backslash
+    /* ignore last token if broken quotes/backslash */
     if (currentToken && !escaped && !quoteChar) {
         nextToken();
     }
 
-    return args;
+    return (args);
 }
