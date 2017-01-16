@@ -6,8 +6,7 @@
 #include <QTextStream>
 #include <QUrl>
 
-class FileIO : public QObject
-{
+class FileIO : public QObject {
     Q_OBJECT
 
 public:
@@ -18,4 +17,4 @@ public slots:
     QString read(const QString& sourceUrl);
 };
 
-#endif // FILEIO_H
+#endif /* FILEIO_H */
